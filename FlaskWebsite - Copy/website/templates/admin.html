@@ -1,0 +1,382 @@
+{% extends "base.html" %}
+{% block title %}Admin{% endblock %}
+
+{% block content %}
+
+<style>
+  .course-item {
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+
+  .course-item:hover {
+    background-color: #d1ecf1; /* Light blue background on hover */
+  }
+
+  .card-custom {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); 
+    border-radius: 5px; 
+    overflow: hidden;
+    margin-bottom: 15px; 
+    background-color: #d1ecf1; 
+    padding: 15px; 
+  }
+
+  .card-custom .card-body {
+    padding: 20px;
+  }
+
+  .card-title {
+    font-size: 1.75rem;
+    color: #060606;
+    text-align: center; 
+  }
+
+  .card-title-modules {
+    font-size: 1.5rem;
+    color: #0e0f0f;
+    text-align: center; 
+  }
+
+  .btn-success {
+    background-color: #28a745;
+    border-color: #28a745;
+  }
+
+  .btn-success:hover {
+    background-color: #218838;
+    border-color: #1e7e34;
+  }
+
+  .btn-primary {
+    background-color: #007bff;
+    border-color: #007bff;
+  }
+
+  .btn-primary:hover {
+    background-color: #0056b3;
+    border-color: #004085;
+  }
+
+  .list-group-item {
+    border: 1px solid #ddd;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    padding: 10px 15px;
+    background-color: #f8f9fa;
+  }
+
+  .section-title {
+    text-align: center;
+    font-size: 2rem;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    color: #007bff; /* Added color */
+    position: relative;
+    display: inline-block;
+    padding: 0 15px;
+    background: linear-gradient(to right, rgba(121, 205, 166, 0.3), rgba(0, 0, 0, 0));
+    color: #333;
+  }
+
+  .section-title::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: -2cm;
+    right: -2cm;
+    height: 100%;
+    background: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(121, 205, 166, 0.3), rgba(0, 0, 0, 0));
+    z-index: -1;
+    transform: translateY(-50%);
+  }
+
+  .section-container {
+    background: #e9ecef;
+    padding: 30px 20px;
+    border-radius: 10px;
+    margin-bottom: 50px;
+  }
+
+  .table-container {
+    margin-top: 2rem;
+  }
+
+  .table-container h2 {
+    margin-bottom: 1.5rem;
+    color: #007bff;
+  }
+
+  .table-container table {
+    width: 100%;
+    margin-bottom: 1.5rem;
+    background-color: #f9f9f9;
+  }
+
+  .table-container .table thead th {
+    background-color: #343a40;
+    color: #fff;
+    border: none;
+  }
+
+  .table-container .table tbody tr:nth-of-type(odd) {
+    background-color: #fff;
+  }
+
+  .table-container .table tbody tr:nth-of-type(even) {
+    background-color: #79cda6; /* Slightly darker light blue for alternating rows */
+  }
+
+  .table-container .table tbody tr {
+    transition: background-color 0.3s;
+  }
+
+  .table-container .table tbody tr:hover {
+    background-color: #d1ecf1; /* Light blue background on hover */
+  }
+
+  .table-container .btn {
+    margin-top: 0.5rem;
+    margin-right: 0.5rem;
+  }
+
+  .table-container .form-control {
+    margin-bottom: 0.5rem;
+  }
+
+  .table-container .collapse {
+    margin-top: 0.5rem;
+  }
+
+  .table-container .delete-btn {
+    background-color: #dc3545;
+    color: #fff;
+    border: none;
+    padding: 0.3rem 0.6rem;
+    cursor: pointer;
+  }
+
+  .table-container .delete-btn:hover {
+    background-color: #c82333;
+  }
+
+  .table-container .btn-primary {
+    background-color: #007bff;
+    border-color: #007bff;
+  }
+
+  .table-container .btn-primary:hover {
+    background-color: #0056b3;
+    border-color: #004085;
+  }
+
+  .table-container .btn-success {
+    background-color: #28a745;
+    border-color: #28a745;
+  }
+
+  .table-container .btn-success:hover {
+    background-color: #218838;
+    border-color: #1e7e34;
+  }
+
+  .table-container .btn {
+    border-radius: 0.25rem;
+  }
+
+  .table-container hr {
+    border-top: 2px solid #007bff;
+  }
+</style>
+
+<div class="container mt-4">
+  <div class="section-container">
+    <h2 class="section-title">Welcome to Admin Page</h2>
+    <div class="form-group">
+      <!-- Dropdown menu for selecting the table to view -->
+      <div class="form-group mb-1">
+        <label for="tableSelector">Select Table:</label>
+        <select class="form-control" id="tableSelector">
+          <option value="usersTable">Users</option>
+          <option value="modulesTable">Modules</option>
+          <option value="coursesTable">Courses</option>
+          <option value="staffTable">Staff</option>
+        </select>
+      </div>
+
+      <!-- Users Table -->
+      <div id="usersTable" class="table-container">
+        <h2>Users</h2>
+        <form action="{{ url_for('views.add_user') }}" method="POST" class="mb-3">
+          <input type="email" name="email" placeholder="Email" required>
+          <input type="text" name="first_Name" placeholder="First Name" required>
+          <input type="text" name="role" placeholder="Role" required>
+          <button type="submit" class="btn btn-primary">Add User</button>
+          <button type="button" class="btn btn-success ml-2" id="updateUser">Update</button>
+        </form>
+        <table class="table table-bordered">
+          <thead class="table-dark">
+            <tr>
+              <th>ID</th>
+              <th>Email</th>
+              <th>First Name</th>
+              <th>Role</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for user in users %}
+            <tr>
+              <td>{{ user.id }}</td>
+              <td>{{ user.email }}</td>
+              <td>{{ user.first_Name }}</td>
+              <td>{{ user.role }}</td>
+              <td>
+                <button type="button" class="btn btn-danger delete-btn">Delete</button>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <hr class="my-5">
+
+      <!-- Modules Table -->
+      <div id="modulesTable" class="table-container" style="display: none;">
+        <h2>Modules</h2>
+        <form action="{{ url_for('views.add_module') }}" method="POST" class="mb-3">
+          <input type="text" name="module_code" placeholder="Module Code" required>
+          <input type="text" name="title" placeholder="Title" required>
+          <input type="text" name="description" placeholder="Description" required>
+          <button type="submit" class="btn btn-primary">Add Module</button>
+          <button type="button" class="btn btn-success ml-2" id="updateUser">Update</button>
+        </form>
+        <table class="table table-bordered">
+          <thead class="table-dark">
+            <tr>
+              <th>Module Code</th>
+              <th>Title</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for module in modules %}
+            <tr>
+              <td>{{ module.module_code }}</td>
+              <td>{{ module.title }}</td>
+              <td>
+                {% if module.description %}
+                <p class="mb-0">{{ module.description[:50] }}{% if module.description|length > 50 %}... <a href="#" data-toggle="collapse" data-target="#moduleDescription{{ module.id }}">Read more</a>{% endif %}</p>
+                <div class="collapse" id="moduleDescription{{ module.id }}">
+                  <p>{{ module.description }}</p>
+                </div>
+                {% endif %}
+              </td>
+              <td>
+                <button type="button" class="btn btn-danger delete-btn">Delete</button>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <hr class="my-5">
+
+      <!-- Courses Table -->
+      <div id="coursesTable" class="table-container" style="display: none;">
+        <h2>Courses</h2>
+        <form action="{{ url_for('views.add_course') }}" method="POST" class="mb-3">
+          <input type="text" name="title" placeholder="Title" required>
+          <input type="text" name="description" placeholder="Description" required>
+          <button type="submit" class="btn btn-primary">Add Course</button>
+          <button type="button" class="btn btn-success ml-2" id="updateUser">Update</button>
+        </form>
+        <table class="table table-bordered">
+          <thead class="table-dark">
+            <tr>
+              <th>ID</th>
+              <th>Title</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for course in courses %}
+            <tr>
+              <td>{{ course.id }}</td>
+              <td>{{ course.title }}</td>
+              <td>
+                {% if course.description %}
+                <p class="mb-0">{{ course.description[:50] }}{% if course.description|length > 50 %}... <a href="#" data-toggle="collapse" data-target="#courseDescription{{ course.id }}">Read more</a>{% endif %}</p>
+                <div class="collapse" id="courseDescription{{ course.id }}">
+                  <p>{{ course.description }}</p>
+                </div>
+                {% endif %}
+              </td>
+              <td>
+                <button type="button" class="btn btn-danger delete-btn">Delete</button>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <hr class="my-5">
+
+      <!-- Staff Table -->
+      <div id="staffTable" class="table-container" style="display: none;">
+        <h2>Staff</h2>
+        <form action="{{ url_for('views.add_staff') }}" method="POST" class="mb-3">
+          <input type="text" name="name" placeholder="Name" required>
+          <input type="text" name="surname" placeholder="Surname" required>
+          <input type="text" name="telephone" placeholder="Telephone" required>
+          <input type="text" name="position" placeholder="Position" required>
+          <button type="submit" class="btn btn-primary">Add Staff</button>
+          <button type="button" class="btn btn-success ml-2" id="updateUser">Update</button>
+        </form>
+        <table class="table table-bordered">
+          <thead class="table-dark">
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Surname</th>
+              <th>Telephone</th>
+              <th>Position</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for person in staff %}
+            <tr>
+              <td>{{ person.id }}</td>
+              <td>{{ person.name }}</td>
+              <td>{{ person.surname }}</td>
+              <td>{{ person.telephone }}</td>
+              <td>{{ person.position }}</td>
+              <td>
+                <button type="button" class="btn btn-danger delete-btn">Delete</button>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.getElementById('tableSelector').addEventListener('change', function () {
+    var selectedTable = this.value;
+    var tables = document.querySelectorAll('.table-container');
+    tables.forEach(function (table) {
+      table.style.display = 'none';
+    });
+    document.getElementById(selectedTable).style.display = 'block';
+  });
+
+  // Set the initial visibility
+  document.getElementById('tableSelector').dispatchEvent(new Event('change'));
+</script>
+
+{% endblock %}

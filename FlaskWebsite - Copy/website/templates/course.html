@@ -1,0 +1,243 @@
+{% extends "base.html" %}
+{% block title %}Courses{% endblock %}
+{% block content %}
+
+<!-- Custom CSS to style the courses and course details sections -->
+<style>
+  .course-item {
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+
+  .course-item:hover {
+    background-color: #d1ecf1; /* Light blue background on hover */
+  }
+
+  .card-custom {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); 
+    border-radius: 5px; 
+    overflow: hidden;
+    margin-bottom: 15px; 
+    background-color: #d1ecf1; /* Light blue background for the card */
+    padding: 15px; 
+  }
+
+  .card-custom .card-body {
+    padding: 20px;
+  }
+
+  .card-title {
+    font-size: 1.75rem;
+    color: #060606;
+    text-align: center; 
+  }
+
+  .card-title-modules {
+    font-size: 1.5rem;
+    color: #0e0f0f;
+    text-align: center; 
+  }
+
+  .btn-success {
+    background-color: #28a745;
+    border-color: #28a745;
+  }
+
+  .btn-success:hover {
+    background-color: #218838;
+    border-color: #1e7e34;
+  }
+
+  .btn-primary {
+    background-color: #007bff;
+    border-color: #007bff;
+  }
+
+  .btn-primary:hover {
+    background-color: #0056b3;
+    border-color: #004085;
+  }
+
+  .list-group-item {
+    border: 1px solid #ddd;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    padding: 10px 15px;
+    background-color: #79cda6;
+  }
+
+  .section-title {
+    text-align: center;
+    font-size: 2rem;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    color: #007bff;
+  }
+
+  .section-container {
+    background: #e9ecef;
+    padding: 30px 20px;
+    border-radius: 10px;
+  }
+</style>
+
+<div class="container mt-4">
+  <div class="section-container">
+    <div class="row">
+      <div class="col-md-4">
+        <h2 class="section-title">Courses</h2>
+        <ul class="list-group" id="course-list">
+          {% for course in courses %}
+          <li class="list-group-item course-item" data-course-id="{{ course.id }}">{{ course.title }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+      <div class="col-md-8">
+        <h2 class="section-title">Course Details</h2>
+        <div id="course-details">
+          <p>Select a course to see details.</p>
+        </div>
+        <!-- Registration Button -->
+        <div class="text-center mt-4">
+          <button id="register-btn" class="btn btn-success" style="display: none;">Register for this Course</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container mt-4">
+  <div class="section-container">
+    <div class="row">
+      <div class="col-md-4">
+        <h2 class="section-title">Featured Courses</h2>
+        <ul class="list-group" id="featured-course-list">
+          {% for course in featured_courses %}
+          <li class="list-group-item course-item" data-course-id="{{ course.id }}">{{ course.title }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+      <div class="col-md-8">
+        <h2 class="section-title">Course Details</h2>
+        <div id="featured-course-details">
+          <p>Select a featured course to see details.</p>
+        </div>
+        <!-- Registration Button -->
+        <div class="text-center mt-4">
+          <button id="featured-register-btn" class="btn btn-success" style="display: none;">Register for this Course</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const courseItems = document.querySelectorAll('.course-item');
+    const registerBtn = document.getElementById('register-btn');
+    let selectedCourseId = null;
+
+    courseItems.forEach(item => {
+      item.addEventListener('click', function () {
+        const courseId = this.getAttribute('data-course-id');
+        selectedCourseId = courseId;
+        fetch(`/course-details/${courseId}`)
+          .then(response => response.json())
+          .then(data => {
+            if (data.error) {
+              console.error(data.error);
+            } else {
+              displayModules(data.modules);
+              registerBtn.style.display = 'block';
+            }
+          })
+          .catch(error => {
+            console.error('Error fetching course details:', error);
+          });
+      });
+    });
+
+    registerBtn.addEventListener('click', function () {
+      if (selectedCourseId) {
+        fetch(`/register-course`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ course_id: selectedCourseId })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            alert('Successfully registered for the course!');
+          } else {
+            alert('Error registering for the course.');
+          }
+        })
+        .catch(error => {
+          console.error('Error registering for course:', error);
+        });
+      }
+    });
+
+    function displayModules(modules) {
+      const courseDetailsContainer = document.getElementById('course-details');
+      courseDetailsContainer.innerHTML = '';
+
+      modules.forEach(module => {
+        const moduleElement = document.createElement('div');
+        moduleElement.classList.add('card', 'mb-4', 'card-custom');
+
+        moduleElement.innerHTML = `
+          <div class="card-body">
+            <h3 class="card-title">${module.title}</h3>
+            <p class="card-text">${module.description || 'No description available'}</p>
+            <button class="btn btn-primary module-details-btn" data-module-code="${module.module_code}">Details</button>
+            <div class="module-content" data-module-code="${module.module_code}"></div>
+          </div>
+        `;
+
+        const detailsButton = moduleElement.querySelector('.module-details-btn');
+        detailsButton.addEventListener('click', function () {
+          const moduleCode = this.getAttribute('data-module-code');
+          fetch(`/module-details/${moduleCode}`)
+            .then(response => response.json())
+            .then(data => {
+              const moduleContentDiv = moduleElement.querySelector('.module-content');
+              if (data.error) {
+                moduleContentDiv.innerHTML = `<p>${data.error}</p>`;
+              } else {
+                moduleContentDiv.innerHTML = `
+                  <h4>${data.section_title}</h4>
+                  <p>${data.description}</p>
+                `;
+              }
+            })
+            .catch(error => {
+              console.error('Error fetching module details:', error);
+            });
+        });
+
+        courseDetailsContainer.appendChild(moduleElement);
+      });
+    }
+    fetch('/featured_courses')
+      .then(response => response.json())
+      .then(courses => {
+        const featuredCourseList = document.getElementById('featured-course-list');
+        featuredCourseList.innerHTML = '';
+
+        courses.forEach(course => {
+          const courseItem = document.createElement('li');
+          courseItem.classList.add('list-group-item', 'course-item');
+          courseItem.textContent = course;
+          featuredCourseList.appendChild(courseItem);
+        });
+      })
+      .catch(error => {
+        console.error('Error fetching featured courses:', error);
+      });
+  });
+</script>
+
+{% endblock %}
